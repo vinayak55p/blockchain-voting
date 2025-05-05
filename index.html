@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blockchain Voting System</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Blockchain Voting: Aryan vs Rushikesh</h2>
+
+    <div id="wallet-connection">
+      <button onclick="connectWallet()">Connect Wallet</button>
+      <p id="wallet-address"></p>
+    </div>
+
+    <div id="voting-section" style="display:none;">
+      <h3>Cast Your Vote</h3>
+      <select id="candidateSelect">
+        <option value="0">Aryan</option>
+        <option value="1">Rushikesh</option>
+      </select>
+      <button onclick="castVote()">Vote</button>
+    </div>
+
+    <div id="results-section">
+      <h3>Current Results</h3>
+      <button onclick="getResults()">Show Results</button>
+      <pre id="results"></pre>
+    </div>
+  </div>
+
+  <script>
+    let contract;
+    const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE"; // Replace after deployment
+    const abi = [ /* PASTE_YOUR_ABI_HERE */ ];
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        document.getElementById("wallet-address").innerText = `Connected: ${accounts[0]}`;
+        const web3 = new Web3(window.ethereum);
+        contract = new web3.eth.Contract(abi, contractAddress);
+        document.getElementById("voting-section").style.display = "block";
+      } else {
+        alert("Please install MetaMask.");
+      }
+    }
+
+    async function castVote() {
+      const candidateIndex = document.getElementById("candidateSelect").value;
+      const accounts = await ethereum.request({ method: "eth_accounts" });
+      try {
+        await contract.methods.vote(candidateIndex).send({ from: accounts[0] });
+        alert("Vote cast successfully!");
+      } catch (error) {
+        alert("Error: You may have already voted.");
+      }
+    }
+
+    async function getResults() {
+      const names = ["Aryan", "Rushikesh"];
+      let resultsText = "";
+      for (let i = 0; i < names.length; i++) {
+        const votes = await contract.methods.getVotes(i).call();
+        resultsText += `${names[i]}: ${votes} votes\n`;
+      }
+      document.getElementById("results").innerText = resultsText;
+    }
+  </script>
+</body>
+</html>
